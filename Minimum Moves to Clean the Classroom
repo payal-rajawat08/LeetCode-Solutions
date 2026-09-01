@@ -1,0 +1,113 @@
+class Solution {
+public int minMoves(String[] classroom, int energy) {
+
+    int m = classroom.length;
+    int n = classroom[0].length();
+
+    int startRow = 0;
+    int startCol = 0;
+    int totalLitter = 0;
+
+    int[][] litterNumber = new int[m][n];
+
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            litterNumber[i][j] = -1;
+        }
+    }
+
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+
+            char cell = classroom[i].charAt(j);
+
+            if (cell == 'S') {
+                startRow = i;
+                startCol = j;
+            }
+
+            if (cell == 'L') {
+                litterNumber[i][j] = totalLitter++;
+            }
+        }
+    }
+
+    int allCollected = (1 << totalLitter) - 1;
+
+    Queue<int[]> queue = new LinkedList<>();
+
+    queue.offer(new int[]{startRow, startCol, energy, 0});
+
+    boolean[][][][] visited =
+        new boolean[m][n][energy + 1][1 << totalLitter];
+
+    visited[startRow][startCol][energy][0] = true;
+
+    int[][] directions = {
+        {1, 0}, {-1, 0}, {0, 1}, {0, -1}
+    };
+
+    int moves = 0;
+
+    while (!queue.isEmpty()) {
+
+        int size = queue.size();
+
+        while (size-- > 0) {
+
+            int[] current = queue.poll();
+
+            int row = current[0];
+            int col = current[1];
+            int currentEnergy = current[2];
+            int mask = current[3];
+
+            if (mask == allCollected) {
+                return moves;
+            }
+
+            if (currentEnergy == 0) {
+                continue;
+            }
+
+            for (int[] direction : directions) {
+
+                int newRow = row + direction[0];
+                int newCol = col + direction[1];
+
+                if (newRow < 0 || newRow >= m ||
+                    newCol < 0 || newCol >= n ||
+                    classroom[newRow].charAt(newCol) == 'X') {
+                    continue;
+                }
+
+                int newEnergy = currentEnergy - 1;
+                int newMask = mask;
+
+                char cell = classroom[newRow].charAt(newCol);
+
+                if (cell == 'L') {
+                    newMask |= (1 << litterNumber[newRow][newCol]);
+                }
+
+                if (cell == 'R') {
+                    newEnergy = energy;
+                }
+
+                if (visited[newRow][newCol][newEnergy][newMask]) {
+                    continue;
+                }
+
+                visited[newRow][newCol][newEnergy][newMask] = true;
+
+                queue.offer(new int[]{
+                    newRow, newCol, newEnergy, newMask
+                });
+            }
+        }
+
+        moves++;
+    }
+
+    return -1;
+}}
