@@ -1,0 +1,21 @@
+class Solution {
+    public boolean uniformArray(int[] nums1) {
+        int small=Integer.MAX_VALUE;
+        for(int i=0;i<nums1.length;i++){
+            if(nums1[i]<small){
+                small=nums1[i];
+            }
+        }
+        //jab smallest even hoga
+        if(small%2==0){
+            for(int i=0;i<nums1.length;i++){
+                if(nums1[i]%2!=0){
+                    return false;
+                }
+            }
+            return true;
+        }else{
+            return true;
+        }  
+    }
+}
