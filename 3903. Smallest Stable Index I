@@ -1,0 +1,32 @@
+class Solution {
+    public int firstStableIndex(int[] nums, int k) {
+        // maximum har index ke liye
+        int maxtemp[]=new int[nums.length];
+        maxtemp[0]=nums[0];
+        for(int i=1;i<nums.length;i++){
+            maxtemp[i]=Math.max(nums[i],maxtemp[i-1]);
+        }
+        // minimum har index ke liye
+        int mintemp[]=new int[nums.length];
+        for(int i=0;i<nums.length;i++){
+            int small = Integer.MAX_VALUE;
+            for(int j=i;j<nums.length;j++){
+                if(nums[j]<small){
+                    small=nums[j];
+                }
+            }
+            mintemp[i]=small;
+        }
+        
+        for(int i=0;i<nums.length;i++){
+            int ans = maxtemp[i]-mintemp[i];
+            if(ans<=k){
+                return i;
+            }
+        }
+        
+
+        
+        return -1;
+    }
+}
