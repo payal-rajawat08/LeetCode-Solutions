@@ -1,0 +1,157 @@
+import java.util.*;
+
+class Solution {
+
+    static class Interval {
+        int l, r, w, idx;
+
+        Interval(int l, int r, int w, int idx) {
+            this.l = l;
+            this.r = r;
+            this.w = w;
+            this.idx = idx;
+        }
+    }
+
+    static class State {
+        long score;
+        int[] indices;
+
+        State(long score, int[] indices) {
+            this.score = score;
+            this.indices = indices;
+        }
+    }
+
+    public int[] maximumWeight(List<List<Integer>> intervals) {
+
+        int n = intervals.size();
+
+        Interval[] arr = new Interval[n];
+
+        for (int i = 0; i < n; i++) {
+            arr[i] = new Interval(
+                intervals.get(i).get(0),
+                intervals.get(i).get(1),
+                intervals.get(i).get(2),
+                i
+            );
+        }
+
+        // Sort by starting position
+        Arrays.sort(arr, (a, b) -> {
+            if (a.l != b.l) {
+                return Integer.compare(a.l, b.l);
+            }
+            return Integer.compare(a.idx, b.idx);
+        });
+
+        State[][] dp = new State[n + 1][5];
+
+        // Base case:
+        // Choosing 0 intervals gives score 0 and empty answer.
+        for (int i = 0; i <= n; i++) {
+            dp[i][0] = new State(0, new int[0]);
+        }
+
+        // No intervals left
+        for (int k = 1; k <= 4; k++) {
+            dp[n][k] = new State(0, new int[0]);
+        }
+
+        for (int i = n - 1; i >= 0; i--) {
+
+            int next = findNext(arr, i + 1, arr[i].r);
+
+            for (int k = 1; k <= 4; k++) {
+
+                // Option 1: skip current interval
+                State skip = dp[i + 1][k];
+
+                // Option 2: take current interval
+                State nextState = dp[next][k - 1];
+
+                long takeScore = arr[i].w + nextState.score;
+
+                int[] takeIndices =
+                    new int[nextState.indices.length + 1];
+
+                takeIndices[0] = arr[i].idx;
+
+                System.arraycopy(
+                    nextState.indices,
+                    0,
+                    takeIndices,
+                    1,
+                    nextState.indices.length
+                );
+
+                // Required for lexicographical comparison
+                Arrays.sort(takeIndices);
+
+                State take = new State(takeScore, takeIndices);
+
+                dp[i][k] = better(skip, take);
+            }
+        }
+
+        return dp[0][4].indices;
+    }
+
+    // Find first interval whose start > current end.
+    // Important: >, NOT >=
+    static int findNext(
+        Interval[] arr,
+        int left,
+        int end
+    ) {
+
+        int right = arr.length;
+
+        while (left < right) {
+
+            int mid = left + (right - left) / 2;
+
+            if (arr[mid].l > end) {
+                right = mid;
+            } else {
+                left = mid + 1;
+            }
+        }
+
+        return left;
+    }
+
+    static State better(State a, State b) {
+
+        // Maximum score
+        if (a.score != b.score) {
+            return a.score > b.score ? a : b;
+        }
+
+        // Same score -> lexicographically smaller indices
+        return lexicographicallySmaller(
+            a.indices,
+            b.indices
+        ) ? a : b;
+    }
+
+    static boolean lexicographicallySmaller(
+        int[] a,
+        int[] b
+    ) {
+
+        int len = Math.min(a.length, b.length);
+
+        for (int i = 0; i < len; i++) {
+
+            if (a[i] != b[i]) {
+                return a[i] < b[i];
+            }
+        }
+
+        // If one is prefix of the other,
+        // shorter array is lexicographically smaller.
+        return a.length < b.length;
+    }
+}
