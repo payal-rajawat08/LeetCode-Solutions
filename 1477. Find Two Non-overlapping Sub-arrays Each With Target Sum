@@ -1,0 +1,30 @@
+import java.util.*;
+
+class Solution {
+    public int minSumOfLengths(int[] arr, int target) {
+        int n = arr.length;
+        int[] best = new int[n];
+        Arrays.fill(best, Integer.MAX_VALUE);
+        Map<Integer, Integer> map = new HashMap<>();
+        int prefix = 0;
+        int ans = Integer.MAX_VALUE;
+        map.put(0, -1);
+        for (int i = 0; i < n; i++) {
+            prefix += arr[i];
+            if (i > 0) {
+                best[i] = best[i - 1];
+            }
+            if (map.containsKey(prefix - target)) {
+                int j = map.get(prefix - target);
+                int len = i - j;
+                if (j >= 0 && best[j] != Integer.MAX_VALUE) {
+                    ans = Math.min(ans, len + best[j]);
+                }
+                best[i] = Math.min(best[i], len);
+            }
+            map.put(prefix, i);
+        }
+
+        return ans == Integer.MAX_VALUE ? -1 : ans;
+    }
+}
