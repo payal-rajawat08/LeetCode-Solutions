@@ -1,0 +1,137 @@
+class Solution {
+
+    int k;
+    Node[] tree;
+
+    class Node {
+        int product;
+        int[] count;
+
+        Node() {
+            count = new int[k];
+        }
+    }
+
+    public int[] resultArray(int[] nums, int k, int[][] queries) {
+
+        this.k = k;
+
+        int n = nums.length;
+        tree = new Node[4 * n];
+
+        build(1, 0, n - 1, nums);
+
+        int[] ans = new int[queries.length];
+
+        for (int q = 0; q < queries.length; q++) {
+
+            int index = queries[q][0];
+            int value = queries[q][1];
+            int start = queries[q][2];
+            int x = queries[q][3];
+
+            // Update
+            update(1, 0, n - 1, index, value);
+
+            // Query from start to end
+            Node result = query(1, 0, n - 1, start, n - 1);
+
+            ans[q] = result.count[x];
+        }
+
+        return ans;
+    }
+
+    void build(int node, int left, int right, int[] nums) {
+
+        if (left == right) {
+
+            tree[node] = new Node();
+
+            tree[node].product = nums[left] % k;
+            tree[node].count[tree[node].product] = 1;
+
+            return;
+        }
+
+        int mid = (left + right) / 2;
+
+        build(node * 2, left, mid, nums);
+        build(node * 2 + 1, mid + 1, right, nums);
+
+        tree[node] = merge(tree[node * 2], tree[node * 2 + 1]);
+    }
+
+    void update(int node, int left, int right, int index, int value) {
+
+        if (left == right) {
+
+            tree[node] = new Node();
+
+            tree[node].product = value % k;
+            tree[node].count[tree[node].product] = 1;
+
+            return;
+        }
+
+        int mid = (left + right) / 2;
+
+        if (index <= mid) {
+            update(node * 2, left, mid, index, value);
+        } else {
+            update(node * 2 + 1, mid + 1, right, index, value);
+        }
+
+        tree[node] = merge(tree[node * 2], tree[node * 2 + 1]);
+    }
+
+    Node query(int node, int left, int right, int ql, int qr) {
+
+        if (ql <= left && right <= qr) {
+            return tree[node];
+        }
+
+        int mid = (left + right) / 2;
+
+        if (qr <= mid) {
+            return query(node * 2, left, mid, ql, qr);
+        }
+
+        if (ql > mid) {
+            return query(node * 2 + 1, mid + 1, right, ql, qr);
+        }
+
+        Node a = query(node * 2, left, mid, ql, qr);
+        Node b = query(node * 2 + 1, mid + 1, right, ql, qr);
+
+        return merge(a, b);
+    }
+
+    Node merge(Node a, Node b) {
+
+        Node res = new Node();
+
+        // Product of whole combined segment
+        res.product = (a.product * b.product) % k;
+
+        // Prefixes completely inside left segment
+        for (int r = 0; r < k; r++) {
+            res.count[r] += a.count[r];
+        }
+
+        // Prefixes that go from left into right
+        for (int r = 0; r < k; r++) {
+
+            for (int s = 0; s < k; s++) {
+
+                int newRemainder = (a.product * s) % k;
+
+                if (newRemainder == r) {
+                    res.count[r] += b.count[s];
+                }
+            }
+        }
+
+        return res;
+    }
+}
